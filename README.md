@@ -23,7 +23,7 @@ An automated Python script that monitors ticket availability on Fansale.es and s
 
 2. **Install required Python packages:**
    ```bash
-   pip install undetected-chromedriver selenium requests
+   pip install -r requirements.txt
    ```
 
 3. **Verify Chrome is installed** (the script will automatically download the matching ChromeDriver)

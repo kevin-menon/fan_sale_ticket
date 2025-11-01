@@ -29,7 +29,12 @@ def check_for_tickets(
     try:
         print("Waiting for event list to become visible...")
 
-        wait = WebDriverWait(driver, 60)
+        # Human-like refresh behavior: vary the sleep time
+        jitter = random.uniform(-JITTER_SECONDS, JITTER_SECONDS)
+        waiting_time = max(
+            1, CHECK_INTERVAL_SECONDS + jitter
+        )  # Ensure at least 1 sec timeout
+        wait = WebDriverWait(driver, waiting_time)
         wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, list_selector)))
 
         event_entries = driver.find_elements(By.CSS_SELECTOR, ".js-EventEntry")
@@ -158,7 +163,7 @@ def main():
         # 6. Set `options.headless = True` again and restart.
         #
         # The script will now use your saved, verified session cookies to run invisibly.
-        options.headless = True
+        options.headless = False
 
         driver = uc.Chrome(options=options, version_main=141)
 

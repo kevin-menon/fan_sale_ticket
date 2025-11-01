@@ -186,6 +186,8 @@ def main():
     logging.info("\n" + "--- Monitoring Log ---")
 
     driver = None
+    ticket_was_available = False
+
     try:
         options = uc.ChromeOptions()
         options.headless = False
@@ -213,13 +215,13 @@ def main():
                 ),
                 "Tickets Found!",
             )
-            logging.info("Exiting.")
-            return
+            ticket_was_available = True
+        else:
+            logging.info(
+                "Baseline established. Target date '%s' not found.",
+                TARGET_DATE_STRING,
+            )
 
-        logging.info(
-            "Baseline established. Target date '%s' not found.",
-            TARGET_DATE_STRING,
-        )
         check_count = 1
 
         while True:
@@ -244,26 +246,51 @@ def main():
                     MAX_PRICE_EUROS,
                 )
 
-                if date_found_now:
-                    logging.info(
-                        "\n!!! TARGET DATE ('%s') FOUND !!!", TARGET_DATE_STRING
-                    )
-                    send_notification(
-                        NTFY_TOPIC,
-                        (
-                            f"Tickets for '{TARGET_DATE_STRING}' "
-                            f"(<= {MAX_PRICE_EUROS}€) "
-                            f"found at {URL_TO_MONITOR}"
-                        ),
-                        "Tickets Found!",
-                    )
-                    logging.info("\nMonitoring has stopped after detecting the date.")
-                    break
-                logging.info(
-                    "No matching tickets found for '%s' <= %.2f€.",
-                    TARGET_DATE_STRING,
-                    MAX_PRICE_EUROS,
-                )
+                if date_found_now != ticket_was_available:
+                    if date_found_now:
+                        logging.info(
+                            "\n!!! TARGET DATE ('%s') FOUND !!!",
+                            TARGET_DATE_STRING,
+                        )
+                        send_notification(
+                            NTFY_TOPIC,
+                            (
+                                f"Tickets for '{TARGET_DATE_STRING}' "
+                                f"(<= {MAX_PRICE_EUROS}€) "
+                                f"found at {URL_TO_MONITOR}"
+                            ),
+                            "Tickets Found!",
+                        )
+                    else:
+                        logging.info(
+                            "\n!!! TARGET DATE ('%s') IS NO LONGER AVAILABLE !!!",
+                            TARGET_DATE_STRING,
+                        )
+                        send_notification(
+                            NTFY_TOPIC,
+                            (
+                                f"Tickets for '{TARGET_DATE_STRING}' "
+                                f"(<= {MAX_PRICE_EUROS}€) "
+                                f"are no longer available."
+                            ),
+                            "Tickets Gone!",
+                        )
+
+                    ticket_was_available = date_found_now
+
+                else:
+                    if date_found_now:
+                        logging.info(
+                            "Matching tickets still available for '%s'. "
+                            "No new notification.",
+                            TARGET_DATE_STRING,
+                        )
+                    else:
+                        logging.info(
+                            "No matching tickets found for '%s' <= %.2f€.",
+                            TARGET_DATE_STRING,
+                            MAX_PRICE_EUROS,
+                        )
 
                 check_count += 1
 
